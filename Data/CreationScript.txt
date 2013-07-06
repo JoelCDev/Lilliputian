@@ -3,94 +3,119 @@ DROP TABLE Lillyputian.Ledger;
 DROP TABLE Lillyputian.Payee;
 DROP TABLE Lillyputian.Category;
 DROP TABLE Lillyputian.SubCategory;
-DROP TABLE Lillyputian.RepeatingTransactions;
+DROP TABLE Lillyputian.RecurringTransactions;
 DROP TABLE Lillyputian.BudgetYear;
 DROP TABLE Lillyputian.BudgetDetail;
 DROP TABLE Lillyputian.Span;
 DROP TABLE Lillyputian.Status;
 DROP TABLE Lillyputian.Type;
 
-CREATE TABLE Lillyputian.Span (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(50) NOT NULL,
-Days INTEGER NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL);
+CREATE TABLE [Status] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(50)] NOT NULL, 
+  [TableType] [VARCHAR(25)] NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.Status (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(50) NOT NULL,
-TableType VARCHAR(25) NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL);
 
-CREATE TABLE Lillyputian.Type (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(50) NOT NULL,
-TableType VARCHAR(25) NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL);
+CREATE TABLE [Type] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(50)] NOT NULL, 
+  [TableType] [VARCHAR(25)] NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.Account (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(255) NOT NULL,
-TypeID VARCHAR(36), 
-Number INTEGER,
-StatusID VARCHAR(36) NOT NULL, 
-Notes TEXT,
-Website TEXT,
-InitialBalance DECIMAL(13,2) DEFAULT(0.00) NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL,
 
-FOREIGN KEY(TypeID) REFERENCES Type(ID),
-FOREIGN KEY(StatusID) REFERENCES Status(ID));
+CREATE TABLE [Account] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(255)] NOT NULL, 
+  [TypeID] [VARCHAR(36)] CONSTRAINT [FK_Account.TypeID_Type.ID] REFERENCES [Type]([ID]), 
+  [Number] INTEGER, 
+  [StatusID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_Account.StatusID_Status.ID] REFERENCES [Status]([ID]), 
+  [Notes] TEXT, 
+  [Website] TEXT, 
+  [InitialBalance] [DECIMAL(13,2)] NOT NULL DEFAULT (0.00), 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.Ledger (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-AccountID VARCHAR(36) NOT NULL,
-TargetAccountID VARCHAR(36),
-PayeeID VARCHAR(36) NOT NULL,
-TypeID VARCHAR(36), 
-StatusID VARCHAR(36), 
-Number INTEGER,
-Amount DECIMAL(13,2) DEFAULT(0.00) NOT NULL,
-Date DATE NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL,
 
-FOREIGN KEY(AccountID) REFERENCES Account(ID),
-FOREIGN KEY(TargetAccountID) REFERENCES Account(ID),
-FOREIGN KEY(PayeeID) REFERENCES Payee(ID),
-FOREIGN KEY(TypeID) REFERENCES Type(ID),
-FOREIGN KEY(StatusID) REFERENCES Status(ID));
+CREATE TABLE [BudgetYear] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(25)] NOT NULL, 
+  [StatusID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_BudgetYear.StatusID_Status.ID] REFERENCES [Status]([ID]), 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.Payee (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(255) NOT NULL,
-CategoryID VARCHAR(36),
-SubCategoryID VARCHAR(36),
-Void BOOLEAN DEFAULT(0) NOT NULL);
 
-CREATE TABLE Lillyputian.Category (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(255) NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL);
+CREATE TABLE [Category] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(255)] NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.SubCategory (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-CategoryID VARCHAR(36) NOT NULL,
-Name VARCHAR(255) NOT NULL,
-Void BOOLEAN DEFAULT(0) NOT NULL);
 
-CREATE TABLE Lillyputian.RepeatingTransactions (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-AcountID VARCHAR(36) NOT NULL,
-TargetAccountID VARCHAR(36),
-PayeeID VARCHAR(36),
-TypeID VARCHAR(36), 
-StatusID VARCHAR(36), 
-Amount DECIMAL(13,2) DEFAULT(0.00) NOT NULL,
-Notes TEXT,
-CategoryID VARCHAR(36),
-SubCategoryID VARCHAR(36),
-SpanID VARCHAR(36) NOT NULL, 
-NextDate DATE NOT NULL,
-RepeatTimes INTEGER DEFAULT(0) NOT NULL);
+CREATE TABLE [Span] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(50)] NOT NULL, 
+  [Days] INTEGER NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
 
-CREATE TABLE Lillyputian.BudgetYear (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-Name VARCHAR(25) NOT NULL,
-StatusID VARCHAR(36) NOT NULL); 
 
-CREATE TABLE Lillyputian.BudgetDetail (ID VARCHAR(36) PRIMARY KEY NOT NULL,
-BudgetYearID VARCHAR(36) NOT NULL,
-CategoryID VARCHAR(36) NOT NULL,
-SubCategoryID VARCHAR(36),
-SpanID VARCHAR(36), 
-Amount DECIMAL(13,2) DEFAULT(0.00) NOT NULL);
+CREATE TABLE [SubCategory] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [CategoryID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_SubCategory.CategoryID_Category.ID] REFERENCES [Category]([ID]), 
+  [Name] [VARCHAR(255)] NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
+
+
+CREATE TABLE [BudgetDetail] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [BudgetYearID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_BudgeDetail.BudgetYearID_BudgetYear.ID] REFERENCES [BudgetYear]([ID]), 
+  [CategoryID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_BudgetDetail.CategoryID_Category.ID] REFERENCES [Category]([ID]), 
+  [SubCategoryID] [VARCHAR(36)] CONSTRAINT [FK_BudgetDetail.SubCategoryID_SubCategory.ID] REFERENCES [SubCategory]([ID]), 
+  [SpanID] [VARCHAR(36)] CONSTRAINT [FK_BudgetDetail.SpanID_Span.ID] REFERENCES [Span]([ID]), 
+  [Amount] [DECIMAL(13,2)] NOT NULL DEFAULT (0.00), 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
+
+
+CREATE TABLE [Payee] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [Name] [VARCHAR(255)] NOT NULL, 
+  [CategoryID] [VARCHAR(36)] CONSTRAINT [FK_Payee.CategoryID_Category.ID] REFERENCES [Category]([ID]), 
+  [SubCategoryID] [VARCHAR(36)] CONSTRAINT [FK_Payee.SubCategoryID_SubCategory.ID] REFERENCES [SubCategory]([ID]), 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
+
+
+CREATE TABLE [Ledger] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [AccountID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_Ledger.AccountID_Account.ID] REFERENCES [Account]([ID]), 
+  [TargetAccountID] [VARCHAR(36)] CONSTRAINT [FK_Ledger.TargetAccountID.Account.ID] REFERENCES [Account]([ID]), 
+  [PayeeID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_Ledger.PayeeID.Payee.ID] REFERENCES [Payee]([ID]), 
+  [TypeID] [VARCHAR(36)] CONSTRAINT [FK_Ledger.TypeID_Type.ID] REFERENCES [Type]([ID]), 
+  [StatusID] [VARCHAR(36)] CONSTRAINT [FK_Ledger.StatusID_Status.ID] REFERENCES [Status]([ID]), 
+  [Number] INTEGER, 
+  [Amount] [DECIMAL(13,2)] NOT NULL DEFAULT (0.00), 
+  [Date] DATE NOT NULL, 
+  [Void] BOOLEAN NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
+
+
+CREATE TABLE [RecurringTransactions] (
+  [ID] [VARCHAR(36)] NOT NULL, 
+  [AcountID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_RecurringTransactions.AccountID_Account.ID] REFERENCES [Account]([ID]), 
+  [TargetAccountID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.TargetAccountID_Account.ID] REFERENCES [Account]([ID]), 
+  [PayeeID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.PayeeID_Payee.ID] REFERENCES [Payee]([ID]), 
+  [TypeID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.TypeID_Type.ID] REFERENCES [Type]([ID]), 
+  [StatusID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.StatusID_Status.ID] REFERENCES [Status]([ID]), 
+  [Amount] [DECIMAL(13,2)] NOT NULL DEFAULT (0.00), 
+  [Notes] TEXT, 
+  [CategoryID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.CategoryID_Category.ID] REFERENCES [Category]([ID]), 
+  [SubCategoryID] [VARCHAR(36)] CONSTRAINT [FK_RecurringTransactions.SubCategoryID_SubCategory.ID] REFERENCES [SubCategory]([ID]), 
+  [SpanID] [VARCHAR(36)] NOT NULL CONSTRAINT [FK_RecurringTransactions.SpanID_Span.ID] REFERENCES [Span]([ID]), 
+  [NextDate] DATE NOT NULL, 
+  [RepeatTimes] INTEGER NOT NULL DEFAULT 0, 
+  CONSTRAINT [] PRIMARY KEY ([ID]) ON CONFLICT FAIL);
+
+
